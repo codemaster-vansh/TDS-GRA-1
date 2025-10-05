@@ -1,0 +1,47 @@
+name: Workflow with Cache
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-with-cache:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Cache dependencies
+      id: cache
+      uses: actions/cache@v4
+      with:
+        path: |
+          ~/.cache
+          node_modules
+        key: cache-827747e-${{ runner.os }}-${{ hashFiles('**/package-lock.json') }}
+        restore-keys: |
+          cache-827747e-${{ runner.os }}-
+    
+    - name: prime-cache-827747e
+      run: |
+        if [ "${{ steps.cache.outputs.cache-hit }}" == "true" ]; then
+          echo "Cache hit! Cache key: cache-827747e"
+        else
+          echo "Cache miss! Building cache with key: cache-827747e"
+        fi
+    
+    - name: Install dependencies (if cache miss)
+      if: steps.cache.outputs.cache-hit != 'true'
+      run: |
+        echo "Installing dependencies..."
+        # Add your actual dependency installation commands here
+        # For example: npm install, pip install -r requirements.txt, etc.
+        mkdir -p ~/.cache
+        echo "sample-dependency" > ~/.cache/deps.txt
+    
+    - name: Run build
+      run: |
+        echo "Running build process..."
+        echo "Cache status was checked in prime-cache-827747e step"
